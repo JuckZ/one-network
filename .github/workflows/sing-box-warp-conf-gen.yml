@@ -1,0 +1,68 @@
+name: Release Warp-Go Proxy Configuration
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build_and_release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up time stamp
+      id: date
+      run: echo "TIMESTAMP=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_ENV
+
+    - name: Install packages
+      run: |
+        sudo apt update
+        sudo apt upgrade -y
+
+    - name: Download and configure warp.conf
+      run: |
+        wget https://api.zeroteam.top/warp?format=warp-go -O warp.conf
+        chmod +x warp.conf
+
+    - name: Download and configure warp-go
+      run: |
+        wget https://github.com/yebekhe/Misaka_warp-script/raw/main/files/warp-go/warp-go-latest-linux-amd64 -O warp-go
+        chmod u+x warp-go
+
+    - name: Update warp-go
+      run: ./warp-go --update --config=warp.conf --license=m5S17oG3-81B0aZG5-16u7nCd9 --device-name=yebekhe
+
+    - name: Export singbox
+      run: |
+        ./warp-go --config=warp.conf --export-singbox=proxy.json
+        cat proxy.json
+
+    - name: Rename file with timestamp
+      run: mv proxy.json proxy-${{ env.TIMESTAMP }}.json
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: proxy-${{ env.TIMESTAMP }}.json
+        path: proxy-${{ env.TIMESTAMP }}.json
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.TIMESTAMP }}
+        release_name: Release-${{ env.TIMESTAMP }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./proxy-${{ env.TIMESTAMP }}.json
+        asset_name: proxy-${{ env.TIMESTAMP }}.json
+        asset_content_type: application/json
