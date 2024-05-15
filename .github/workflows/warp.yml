@@ -1,0 +1,7 @@
+name: Release Warp-Go Proxy Configuration
+
+on: [workflow_dispatch]
+
+jobs:
+  build_and_release:
+    runs-on: ubuntu-latest

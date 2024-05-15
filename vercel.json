@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/services/$1"
+    }
+  ],
+  "build": {
+    "env": {
+      "GO_BUILD_FLAGS": "-ldflags '-s -w'"
+    }
+  }
+}

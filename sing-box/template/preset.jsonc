@@ -1,0 +1,578 @@
+{
+  "log": {
+    "disabled": false,
+    "level": "info",
+    "timestamp": true
+  },
+  "dns": {
+    "servers": [
+      {
+        "tag": "dns_cloudflare",
+        "address": "https://1.1.1.1/dns-query",
+        "detour": "Proxy"
+      },
+      {
+        "tag": "dns_local",
+        "address": "https://1.12.12.12/dns-query",
+        "detour": "direct"
+      },
+      {
+        "tag": "dns_proxy",
+        "address": "tls://1.1.1.1",
+        "address_resolver": "dns_resolver"
+      },
+      {
+        "tag": "dns_direct",
+        "address": "h3://dns.alidns.com/dns-query",
+        "address_resolver": "dns_resolver",
+        "detour": "DIRECT"
+      },
+      {
+        "tag": "dns_block",
+        "address": "rcode://refused"
+      },
+      {
+        "tag": "dns_fakeip",
+        "address": "fakeip"
+      },
+      {
+        "tag": "dns_resolver",
+        "address": "223.5.5.5",
+        "detour": "DIRECT"
+      },
+      {
+        "tag": "block",
+        "address": "rcode://success"
+      }
+    ],
+    "rules": [
+      {
+        "outbound": [
+          "any"
+        ],
+        "server": "dns_resolver" // TODO "dns_local"
+        // 注释：对于任何出站连接（不管是直接连接还是通过代理），使用 "dns_resolver" 服务器进行 DNS 解析（这一句主要用来解析代理节点本身的 IP 地址）。
+      },
+      {
+        "clash_mode": "Direct",
+        "server": "dns_direct"
+        // 注释：在直连模式（不经过代理）下，使用 "dns_direct" 服务器进行 DNS 解析。
+      },
+      {
+        "clash_mode": "Global",
+        "server": "dns_cloudflare"
+        // 注释：在全局代理模式下，使用 "dns_cloudflare" 服务器进行 DNS 解析。
+      },
+      {
+        "process_name": [
+          "TencentMeeting",
+          "NemoDesktop",
+          "ToDesk",
+          "ToDesk_Service",
+          "WeChat",
+          "Tailscale",
+          "wireguard-go",
+          "Tunnelblick",
+          "softwareupdated",
+          "kubectl"
+        ],
+        "server": "dns_direct"
+      },
+      {
+        "domain_suffix": [
+          "ihave.cool",
+          "uhave.cool"
+        ],
+        "server": "dns_direct"
+      },
+      {
+        "process_name": [
+          "DropboxMacUpdate",
+          "Dropbox"
+        ],
+        "server": "dns_proxy"
+      },
+      {
+        "package_name": [
+          "com.google.android.youtube",
+          "com.android.vending",
+          "org.telegram.messenger",
+          "org.telegram.plus"
+        ],
+        "server": "dns_proxy"
+        // 注释：对于特定的 Android 应用包名（如 YouTube、Telegram 等），使用 "dns_proxy" 服务器通过代理进行 DNS 解析。
+      },
+      {
+        "rule_set": "geosite-geolocation-cn",
+        "server": "dns_local"
+      },
+      {
+        "rule_set": "geosite-geolocation-!cn", // TODO
+        "server": "dns_proxy"
+      },
+      {
+        "rule_set": "Global",
+        "server": "dns_proxy"
+      },
+      {
+        "rule_set": [
+          "YouTube",
+          "Telegram",
+          "Netflix",
+          "geoip-google",
+          "geoip-telegram",
+          "geoip-twitter",
+          "geoip-netflix"
+        ],
+        "server": "dns_proxy"
+      },
+      {
+        "geosite": [
+          "category-ads-all"
+        ],
+        "server": "dns_block",
+        "disable_cache": true
+      },
+      {
+        "geosite": [
+          "geolocation-!cn" // TODO
+        ],
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
+        "server": "dns_fakeip"
+      },
+      {
+        "geosite": [
+          "geolocation-!cn"
+        ],
+        "server": "dns_proxy"
+      }
+    ],
+    "final": "dns_direct", // TODO "dns_cloudflare"
+    "strategy": "prefer_ipv4",
+    "independent_cache": true,
+    "fakeip": {
+      "enabled": true,
+      "inet4_range": "198.18.0.0/15",
+      "inet6_range": "fc00::/18"
+    }
+  },
+  "ntp": {
+    "enabled": true,
+    "server": "time.apple.com",
+    "server_port": 123,
+    "interval": "30m",
+    "detour": "DIRECT"
+  },
+  "inbounds": [
+    {
+      "type": "mixed",
+      "tag": "mixed-in",
+      "listen": "::",
+      "listen_port": 7890,
+      "sniff": true
+    },
+    {
+      "type": "socks",
+      "tag": "socks-in",
+      "listen": "::",
+      "listen_port": 5353
+    },
+    {
+      "type": "tun",
+      "tag": "tun-in",
+      "interface_name": "utun",
+      "inet4_address": "172.19.0.1/30",
+      "inet6_address": "fdfe:dcba:9876::1/126",
+      "mtu": 1500,
+      "auto_route": true,
+      "strict_route": true,
+      "exclude_package": [
+        "cmb.pb",
+        "cn.gov.pbc.dcep",
+        "com.MobileTicket",
+        "com.adguard.android",
+        "com.ainemo.dragoon",
+        "com.alibaba.android.rimet",
+        "com.alicloud.databox",
+        "com.amazing.cloudisk.tv",
+        "com.autonavi.minimap",
+        "com.bilibili.app.in",
+        "com.bishua666.luxxx1",
+        "com.cainiao.wireless",
+        "com.chebada",
+        "com.chinamworld.main",
+        "com.cmbchina.ccd.pluto.cmbActivity",
+        "com.coolapk.market",
+        "com.ctrip.ct",
+        "com.dianping.v1",
+        "com.douban.frodo",
+        "com.eg.android.AlipayGphone",
+        "com.farplace.qingzhuo",
+        "com.hanweb.android.zhejiang.activity",
+        "com.leoao.fitness",
+        "com.lucinhu.bili_you",
+        "com.mikrotik.android.tikapp",
+        "com.moji.mjweather",
+        "com.motorola.cn.calendar",
+        "com.motorola.cn.lrhealth",
+        "com.netease.cloudmusic",
+        "com.sankuai.meituan",
+        "com.sina.weibo",
+        "com.smartisan.notes",
+        "com.sohu.inputmethod.sogou.moto",
+        "com.sonelli.juicessh",
+        "com.ss.android.article.news",
+        "com.ss.android.lark",
+        "com.ss.android.ugc.aweme",
+        "com.tailscale.ipn",
+        "com.taobao.idlefish",
+        "com.taobao.taobao",
+        "com.tencent.mm",
+        "com.tencent.mp",
+        "com.tencent.soter.soterserver",
+        "com.tencent.wemeet.app",
+        "com.tencent.weread",
+        "com.tencent.wework",
+        "com.ttxapps.wifiadb",
+        "com.unionpay",
+        "com.unnoo.quan",
+        "com.wireguard.android",
+        "com.xingin.xhs",
+        "com.xunmeng.pinduoduo",
+        "com.zui.zhealthy",
+        "ctrip.android.view",
+        "io.kubenav.kubenav",
+        "org.geekbang.geekTime",
+        "tv.danmaku.bili"
+      ], // 列出的 Android 应用程序将使用常规网络接口而不是虚拟接口
+      "stack": "system", // TODO "mixed"表示混合 system TCP 栈与 gvisor UDP 栈。
+      "sniff": true
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "direct",
+      "tag": "DIRECT"
+    },
+    {
+      "type": "block",
+      "tag": "REJECT"
+    },
+    {
+      "type": "dns",
+      "tag": "dns-out"
+    },
+    {
+      "tag": "Proxy",
+      "type": "selector",
+      "outbounds": [
+        "Auto",
+        "🇭🇰⬩HKG",
+        "🇯🇵⬩OSA",
+        "🇯🇵⬩TYO",
+        "🇰🇷⬩SEL",
+        "🇸🇬⬩SGP"
+      ]
+    },
+    {
+      "tag": "Auto",
+      "type": "urltest",
+      "outbounds": [
+        "🇭🇰⬩HKG",
+        "🇯🇵⬩OSA",
+        "🇯🇵⬩TYO",
+        "🇰🇷⬩SEL",
+        "🇸🇬⬩SGP"
+      ]
+    },
+    {
+      "tag": "Bilibili",
+      "type": "selector",
+      "outbounds": [
+        "🇭🇰⬩HKG",
+        "🇯🇵⬩OSA",
+        "🇯🇵⬩TYO",
+        "🇰🇷⬩SEL",
+        "🇸🇬⬩SGP"
+      ]
+    }
+  ],
+  "route": {
+    "rules": [
+      {
+        "type": "logical",
+        "mode": "or",
+        "rules": [
+          {
+            "protocol": "dns"
+          },
+          {
+            "port": 53
+          }
+        ],
+        "outbound": "dns-out"
+      },
+      {
+        "ip_is_private": true,
+        "outbound": "DIRECT"
+      },
+      {
+        "clash_mode": "Direct",
+        "outbound": "DIRECT"
+      },
+      {
+        "clash_mode": "Global",
+        "outbound": "GLOBAL"
+      },
+      {
+        "rule_set": "netflix",
+        "outbound": "Netflix"
+      },
+      {
+        "rule_set": "openai",
+        "outbound": "OpenAI"
+      },
+      {
+        "package_name": "com.openai.chatgpt",
+        "outbound": "OpenAI"
+      },
+      {
+        "rule_set": "spotify",
+        "outbound": "Spotify"
+      },
+      {
+        "rule_set": "youtube",
+        "outbound": "YouTube"
+      },
+      {
+        "rule_set": "disney",
+        "outbound": "DisneyPlus"
+      },
+      {
+        "rule_set": "bilibili",
+        "outbound": "Bilibili"
+      },
+      {
+        "protocol": "quic",
+        "outbound": "block"
+      },
+      {
+        "inbound": "socks-in",
+        "outbound": "Select"
+      },
+      {
+        "rule_set": "gfwlist",
+        "outbound": "Proxy"
+      },
+      {
+        "rule_set": "telegram",
+        "outbound": "Proxy"
+      },
+      {
+        "rule_set": [
+          "geoip-cn",
+          "geosite-geolocation-cn",
+          "apple",
+          "microsoft",
+          "steam"
+        ],
+        "outbound": "direct"
+      },
+      {
+        "type": "logical",
+        "mode": "and",
+        "rules": [
+          {
+            "rule_set": "geosite-geolocation-!cn"
+          },
+          {
+            "rule_set": "geoip-cn",
+            "invert": true
+          }
+        ],
+        "outbound": "direct"
+      },
+      {
+        "ip_is_private": true,
+        "outbound": "direct"
+      }
+    ],
+    "rule_set": [
+      {
+        "type": "remote",
+        "tag": "geoip-cn",
+        "format": "binary",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-geolocation-!cn",
+        "format": "binary",
+        "url": "https://mirror.ghproxy.com/https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-geolocation-!cn.srs",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-geolocation-cn",
+        "format": "binary",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-geolocation-cn.srs"
+      },
+      {
+        "type": "remote",
+        "tag": "geoip-google",
+        "format": "binary",
+        "url": "https://mirror.ghproxy.com/https://raw.githubusercontent.com/CHIZI-0618/v2ray-rules-dat/release/singbox_ip_rule_set/geoip-google.srs",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "apple",
+        "format": "binary",
+        "url": "https://fastly.jsdelivr.net/gh/gfw-list/gfwlist@files/sing-box/apple.srs"
+      },
+      {
+        "type": "remote",
+        "tag": "bilibili",
+        "format": "binary",
+        "url": "https://fastly.jsdelivr.net/gh/gfw-list/gfwlist@files/sing-box/bilibili.srs"
+      },
+      {
+        "type": "remote",
+        "tag": "disney",
+        "format": "binary",
+        "url": "https://fastly.jsdelivr.net/gh/gfw-list/gfwlist@files/sing-box/disney.srs"
+      },
+      {
+        "type": "remote",
+        "tag": "microsoft",
+        "format": "binary",
+        "url": "https://fastly.jsdelivr.net/gh/gfw-list/gfwlist@files/sing-box/microsoft.srs"
+      },
+      {
+        "type": "remote",
+        "tag": "geoip-twitter",
+        "format": "binary",
+        "url": "https://mirror.ghproxy.com/https://raw.githubusercontent.com/CHIZI-0618/v2ray-rules-dat/release/singbox_ip_rule_set/geoip-twitter.srs",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "netflix",
+        "format": "binary",
+        "url": "https://fastly.jsdelivr.net/gh/gfw-list/gfwlist@files/sing-box/netflix.srs"
+      },
+      {
+        "type": "remote",
+        "tag": "openai",
+        "format": "binary",
+        "url": "https://fastly.jsdelivr.net/gh/gfw-list/gfwlist@files/sing-box/openai.srs"
+      },
+      {
+        "type": "remote",
+        "tag": "spotify",
+        "format": "binary",
+        "url": "https://fastly.jsdelivr.net/gh/gfw-list/gfwlist@files/sing-box/spotify.srs"
+      },
+      {
+        "type": "remote",
+        "tag": "steam",
+        "format": "binary",
+        "url": "https://fastly.jsdelivr.net/gh/gfw-list/gfwlist@files/sing-box/steam.srs"
+      },
+      {
+        "type": "remote",
+        "tag": "telegram",
+        "format": "binary",
+        "url": "https://fastly.jsdelivr.net/gh/gfw-list/gfwlist@files/sing-box/telegram.srs"
+      },
+      {
+        "type": "remote",
+        "tag": "youtube",
+        "format": "binary",
+        "url": "https://fastly.jsdelivr.net/gh/gfw-list/gfwlist@files/sing-box/youtube.srs"
+      },
+      {
+        "type": "remote",
+        "tag": "gfwlist",
+        "format": "binary",
+        "url": "https://fastly.jsdelivr.net/gh/gfw-list/gfwlist@files/sing-box/gfwlist.srs"
+      },
+      {
+        "type": "remote",
+        "tag": "Global",
+        "format": "source",
+        "url": "https://mirror.ghproxy.com/https://raw.githubusercontent.com/yangchuansheng/sing-box-geosite/main/rule/Global.json",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "YouTube",
+        "format": "source",
+        "url": "https://mirror.ghproxy.com/https://raw.githubusercontent.com/yangchuansheng/sing-box-geosite/main/rule/YouTube.json",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "OpenAI",
+        "format": "source",
+        "url": "https://mirror.ghproxy.com/https://raw.githubusercontent.com/yangchuansheng/sing-box-geosite/main/rule/OpenAI.json",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "TikTok",
+        "format": "source",
+        "url": "https://mirror.ghproxy.com/https://raw.githubusercontent.com/yangchuansheng/sing-box-geosite/main/rule/TikTok.json",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "Telegram",
+        "format": "source",
+        "url": "https://mirror.ghproxy.com/https://raw.githubusercontent.com/yangchuansheng/sing-box-geosite/main/rule/Telegram.json",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "Netflix",
+        "format": "source",
+        "url": "https://mirror.ghproxy.com/https://raw.githubusercontent.com/yangchuansheng/sing-box-geosite/main/rule/Netflix.json",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "WeChat",
+        "format": "source",
+        "url": "https://mirror.ghproxy.com/https://raw.githubusercontent.com/yangchuansheng/sing-box-geosite/main/rule/WeChat.json",
+        "download_detour": "direct"
+      },
+      {
+        "type": "remote",
+        "tag": "Bilibili",
+        "format": "source",
+        "url": "https://mirror.ghproxy.com/https://raw.githubusercontent.com/yangchuansheng/sing-box-geosite/main/rule/Bilibili.json",
+        "download_detour": "direct"
+      }
+    ],
+    "final": "Proxy", // TODO "🐟 漏网之鱼"
+    "find_process": true,
+    "auto_detect_interface": true
+  },
+  "experimental": {
+    "cache_file": {
+      "enabled": true, // 启用缓存文件功能。当此项设置为true时，启用 DNS 查询的缓存，以便加快后续相同查询的响应速度。
+      "store_fakeip": false
+    },
+    "clash_api": {
+      "external_controller": "0.0.0.0:9090", // 定义 Clash API 的外部控制器地址。"0.0.0.0:9090" 表示在本机的9090端口上监听外部的连接请求。
+      "external_ui": "metacubexd", // 指定外部用户界面(UI)的名称。这里的 "metacubexd" 是一个自定义 UI 的名称。
+      "external_ui_download_url": "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip", // 提供外部 UI 的下载 URL。这个 URL 是从 GitHub 上下载 "metacubexd" UI 的压缩包。
+      "external_ui_download_detour": "select", // 定义下载外部 UI 时使用的转发策略。"select" 表示将通过'select'出口选择转发
+      "secret": "",
+      "default_mode": "rule" // 设置 Clash API 的默认模式。"rule" 模式意味着流量将根据用户定义的规则进行路由。
+    }
+  }
+}

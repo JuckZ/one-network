@@ -1,0 +1,14 @@
+# version: "3.8"
+services:
+  warp-clash:
+    container_name: warp-clash
+    image: vvbbnn00/warp-clash-api:latest
+    ports:
+      - "21001:3000"
+    # env_file:
+    #   - .env.local
+    environment:
+      SECRET_KEY: 123456
+    volumes:
+      - ./account:/app/account
+      - ./logs:/app/logs
